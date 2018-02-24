@@ -9,6 +9,9 @@ import sklearn.gaussian_process as gp
 from scipy.stats import norm
 from scipy.optimize import minimize
 
+import slice_sampling as ssp
+
+
 def expected_improvement(x, gaussian_process, evaluated_loss, greater_is_better=False, n_params=1):
     """ expected_improvement
 
@@ -31,6 +34,8 @@ def expected_improvement(x, gaussian_process, evaluated_loss, greater_is_better=
     """
 
     x_to_predict = x.reshape(-1, n_params)
+    gaussian_process = gaussian_process[0]
+    #print(type(gaussian_process))
 
     mu, sigma = gaussian_process.predict(x_to_predict, return_std=True)
 
@@ -55,15 +60,15 @@ def expected_improvement(x, gaussian_process, evaluated_loss, greater_is_better=
 def expected_improvement_average(x, gaussian_process_list, evaluated_loss, greater_is_better=False, n_params=1):
 
 	average = 0
-	for i in range(len(gaussian_process)):
+	for i in range(len(gaussian_process_list)):
 		average = average + expected_improvement(x, gaussian_process_list[i], evaluated_loss, greater_is_better, n_params)
 		
-	average = average/len(gaussian_process)
+	average = average/len(gaussian_process_list)
 	return average
 
 	
 	
-def sample_next_hyperparameter(acquisition_func, gaussian_process, evaluated_loss, greater_is_better=False,
+def sample_next_hyperparameter(acquisition_func, gaussian_process_list, evaluated_loss, greater_is_better=False,
                                bounds=(0, 10), n_restarts=25):
     """ sample_next_hyperparameter
 
@@ -89,6 +94,9 @@ def sample_next_hyperparameter(acquisition_func, gaussian_process, evaluated_los
     best_x = None
     best_acquisition_value = 1
     n_params = bounds.shape[0]
+    print(gaussian_process_list)
+    print(np.array(gaussian_process_list))
+    print(len(gaussian_process_list))
 
     for starting_point in np.random.uniform(bounds[:, 0], bounds[:, 1], size=(n_restarts, n_params)):
 
@@ -96,7 +104,10 @@ def sample_next_hyperparameter(acquisition_func, gaussian_process, evaluated_los
                        x0=starting_point.reshape(1, -1),
                        bounds=bounds,
                        method='L-BFGS-B',
-                       args=(gaussian_process, evaluated_loss, greater_is_better, n_params))
+                       args=(np.array(gaussian_process_list).reshape(1, len(gaussian_process_list)), 
+                             evaluated_loss, 
+                             greater_is_better, 
+                             n_params))
 
         if res.fun < best_acquisition_value:
             best_acquisition_value = res.fun
@@ -106,7 +117,7 @@ def sample_next_hyperparameter(acquisition_func, gaussian_process, evaluated_los
 
 
 def bayesian_optimisation(n_iters, sample_loss, bounds, x0=None, n_pre_samples=5,
-                          gp_params=None, random_search=False, alpha=1e-5, epsilon=1e-7):
+                          gp_params=None, random_search=False, alpha=1e-5, epsilon=1e-7, burn_in=200, num_samples=3):
     """ bayesian_optimisation
 
     Uses Gaussian Processes to optimise the loss function `sample_loss`.
@@ -153,18 +164,53 @@ def bayesian_optimisation(n_iters, sample_loss, bounds, x0=None, n_pre_samples=5
     yp = np.array(y_list)
 
     # Create the GP
-    if gp_params is not None:
-        model = gp.GaussianProcessRegressor(**gp_params)
-    else:
-        kernel = gp.kernels.Matern()
-        model = gp.GaussianProcessRegressor(kernel=kernel,
-                                            alpha=alpha,
-                                            n_restarts_optimizer=10,
-                                            normalize_y=True)
-
+#    if gp_params is not None:
+#        model = gp.GaussianProcessRegressor(**gp_params)
+#    else:
+#        kernel = gp.kernels.Matern()
+#        model = gp.GaussianProcessRegressor(kernel=kernel,
+#                                            alpha=alpha,
+#                                            n_restarts_optimizer=10,
+#                                            normalize_y=True)
+        
+    kernel = gp.kernels.Sum(gp.kernels.WhiteKernel(),gp.kernels.Product(gp.kernels.ConstantKernel(),gp.kernels.Matern(nu=5./2.)))
+    model = ssp.Gaussian_Process(kernel = kernel)
+    
     for n in range(n_iters):
 
+        print("Iteration")
+        print(n)
         model.fit(xp, yp)
+        
+        slice_sampler = ssp.Slice_sampler(num_iters = 3, 
+                                      sigma = np.ones(n_params+2), 
+                                      burn_in = burn_in,
+                                      gp = model)
+    
+        sample_list = []
+        gaussian_list = []
+        for i in range(num_samples):
+            samples = slice_sampler.sample(init = np.ones(n_params+2))
+            sample_list.append(samples)
+            gauss = ssp.Gaussian_Process(kernel = kernel)
+            gauss.gp_.set_params(**{"kernel__k1__noise_level": np.abs(samples[0]),
+                              "kernel__k2__k1__constant_value": np.abs(samples[1]),
+                              "kernel__k2__k2__length_scale": samples[2:]})
+            gaussian_list.append(gauss)
+       
+        #theta_opt = [np.mean(samples_k) for samples_k in samples]
+        
+        # kernel__k1__noise_level = noise of the data
+        # kernel__k2__k1__constant_value = aplitude
+        # kernel__k2__k2__length_scale = Matern length scales
+        
+        #for 
+        #model = Gaussian_Process(kernel = kernel)
+        #self.gp_.set_params(**{"kernel__k1__noise_level": np.abs(theta_opt[0]),
+        #                      "kernel__k2__k1__constant_value": np.abs(theta_opt[1]),
+        #                      "kernel__k2__k2__length_scale": theta_opt[2:]})
+        
+        
 
         # Sample next hyperparameter
         if random_search:
@@ -172,7 +218,7 @@ def bayesian_optimisation(n_iters, sample_loss, bounds, x0=None, n_pre_samples=5
             ei = -1 * expected_improvement_average(x_random, model, yp, greater_is_better=True, n_params=n_params)
             next_sample = x_random[np.argmax(ei), :]
         else:
-            next_sample = sample_next_hyperparameter(expected_improvement_average, model, yp, greater_is_better=True, bounds=bounds, n_restarts=100)
+            next_sample = sample_next_hyperparameter(expected_improvement_average, gaussian_list, yp, greater_is_better=True, bounds=bounds, n_restarts=10)
 
         # Duplicates will break the GP. In case of a duplicate, we will randomly sample a next query point.
         if np.any(np.abs(next_sample - xp) <= epsilon):
