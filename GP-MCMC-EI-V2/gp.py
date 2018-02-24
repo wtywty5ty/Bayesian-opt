@@ -65,7 +65,7 @@ def integrate_EI(x, sample_theta_list, evaluated_loss, mode, greater_is_better=F
             expected_improvement = scaling_factor * (mu - loss_optimum) * norm.cdf(Z) + sigma * norm.pdf(Z)
             expected_improvement[sigma == 0.0] == 0.0
         ei_list.append(expected_improvement[0])
-    res_ei = np.max(ei_list)
+    res_ei = np.mean(ei_list)
     result = np.array([res_ei])
     return -1 * result
 
