@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11637357-6e9d-4cba-bd2a-18cb376b49a4" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GP-MCMC-EI-V2/Experiment_1_v2.ipynb" afterPath="$PROJECT_DIR$/GP-MCMC-EI-V2/Experiment_1_v2.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/python/slice_sampling.py" afterPath="$PROJECT_DIR$/python/slice_sampling.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/master/Experiment_Branin-Hoo.ipynb" afterPath="$PROJECT_DIR$/master/Experiment_Branin-Hoo.ipynb" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -56,14 +54,23 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="slice_sampling.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="slice_sampling.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/python/slice_sampling.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-960">
-              <caret line="6" column="56" lean-forward="true" selection-start-line="6" selection-start-column="56" selection-end-line="6" selection-end-column="56" />
+            <state relative-caret-position="1500">
+              <caret line="100" column="36" lean-forward="true" selection-start-line="100" selection-start-column="36" selection-end-line="100" selection-end-column="36" />
               <folding>
                 <element signature="e#0#70#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Experiment_Branin-Hoo.ipynb" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/master/Experiment_Branin-Hoo.ipynb">
+          <provider selected="true" editor-type-id="ipnb-editor">
+            <state>
+              <selected id="5" />
             </state>
           </provider>
         </entry>
@@ -86,6 +93,7 @@
         <option value="$PROJECT_DIR$/master/Experiment_1_v2.ipynb" />
         <option value="$PROJECT_DIR$/python/slice_sampling.py" />
         <option value="$PROJECT_DIR$/Gp_slice_sampling_optimisation.ipynb" />
+        <option value="$PROJECT_DIR$/master/Experiment_Branin-Hoo.ipynb" />
       </list>
     </option>
   </component>
@@ -298,11 +306,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/python/slice_sampling.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-960">
-          <caret line="6" column="56" lean-forward="true" selection-start-line="6" selection-start-column="56" selection-end-line="6" selection-end-column="56" />
+        <state relative-caret-position="1500">
+          <caret line="100" column="36" lean-forward="true" selection-start-line="100" selection-start-column="36" selection-end-line="100" selection-end-column="36" />
           <folding>
             <element signature="e#0#70#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/master/Experiment_Branin-Hoo.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="5" />
         </state>
       </provider>
     </entry>
