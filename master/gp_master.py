@@ -471,4 +471,4 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
         yp = np.array(y_list)
         yp_logdur = np.log(np.array(y_dur_list))
 
-    return xp, yp, yp_logdur
+    return xp, yp
