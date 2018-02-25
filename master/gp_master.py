@@ -359,7 +359,8 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
     y_dur_list = []
 
     n_params = bounds.shape[0]
-
+    
+    print ('Start pre-sampling...')
     if x0 is None:
         # random draw several points as GP prior
         for params in np.random.uniform(bounds[:, 0], bounds[:, 1], (n_pre_samples, bounds.shape[0])):
@@ -375,6 +376,7 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
             y_list.append(sample_loss(params))
             elapsed = (time.clock() - start)
             y_dur_list.append(elapsed)
+    print ('Pre-sampling finished.')
 
     xp = np.array(x_list)
     yp = np.array(y_list)
@@ -402,7 +404,7 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
     for n in range(n_iters):
         iter_num += 1
         if iter_num % int(n_iters/2) == 0:
-            print ('%d iterations have been run' % iter_num)
+            print ('%d actucal iterations have been run' % iter_num)
         else:
             pass
 
