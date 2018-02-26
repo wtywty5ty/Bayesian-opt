@@ -357,6 +357,7 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
     x_list = []
     y_list = []
     y_dur_list = []
+    time_list = []
 
     n_params = bounds.shape[0]
     
@@ -402,6 +403,9 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
 
     iter_num = 0
     for n in range(n_iters):
+        #Start the clock for recording total running time per iteration
+        ite_start = time.clock()
+        
         iter_num += 1
         if iter_num % int(n_iters/2) == 0:
             print ('%d actucal iterations have been run' % iter_num)
@@ -427,7 +431,7 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
                 for sample_acqui_time in range(acqui_sample_num):
                     initial_rho = np.zeros((input_dimension + 2, ))
                     one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
-                    one_theta = np.log(1.0 + np.exp(rho))
+                    one_theta = np.log(1.0 + np.exp(one_rho))
                     sample_theta_list.append(one_theta)
 
                 next_sample = integrate_sample(integrate_EI,sample_theta_list, yp, mode,
@@ -439,7 +443,7 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
                 for sample_acqui_time in range(acqui_sample_num):
                     initial_rho = np.zeros((input_dimension + 2, ))
                     one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
-                    one_theta = np.log(1.0 + np.exp(rho))
+                    one_theta = np.log(1.0 + np.exp(one_rho))
                     sample_theta_list.append(one_theta)
 
                 next_sample = integrate_sample_perSec(integrate_EI_perSec, sample_theta_list, dur, yp, mode,
@@ -470,5 +474,9 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
         xp = np.array(x_list)
         yp = np.array(y_list)
         yp_logdur = np.log(np.array(y_dur_list))
+        
+        ite_elapsed = (time.clock() - ite_start)
+        time_list.append(ite_elapsed)
+        timep = np.array(time_list)
 
-    return xp, yp
+    return xp, yp, timep
