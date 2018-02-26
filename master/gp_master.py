@@ -425,9 +425,8 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
             elif acqui_mode == 'MCMC':
                 sample_theta_list = list()
                 for sample_acqui_time in range(acqui_sample_num):
-                    initial_rho = np.ones((input_dimension + 2, ))
-                    #initial_theta = np.log(1.0 + np.exp(initial_rho))
-                    rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
+                    initial_rho = np.zeros((input_dimension + 2, ))
+                    one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
                     one_theta = np.log(1.0 + np.exp(rho))
                     sample_theta_list.append(one_theta)
 
@@ -438,10 +437,9 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
             elif acqui_mode == 'PERSEC':
                 sample_theta_list = list()
                 for sample_acqui_time in range(acqui_sample_num):
-                    initial_log_theta = np.ones((input_dimension + 2,))
-                    initial_theta = np.exp(1.0 + initial_log_theta)
-                    one_log_theta = acqui_slice_sampler.sample(init=initial_theta, gp=model)
-                    one_theta = np.exp(1.0 + one_log_theta)
+                    initial_rho = np.zeros((input_dimension + 2, ))
+                    one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
+                    one_theta = np.log(1.0 + np.exp(rho))
                     sample_theta_list.append(one_theta)
 
                 next_sample = integrate_sample_perSec(integrate_EI_perSec, sample_theta_list, dur, yp, mode,
