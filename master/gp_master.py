@@ -426,9 +426,11 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
                 sample_theta_list = list()
                 for sample_acqui_time in range(acqui_sample_num):
                     initial_log_theta = np.ones((input_dimension + 2, ))
-                    initial_theta = np.exp(1.0 + initial_log_theta)
+                    initial_theta = np.log(1.0 + np.exp(initial_log_theta))
+                    #initial_theta = np.exp(1.0 + initial_log_theta)
                     one_log_theta = acqui_slice_sampler.sample(init = initial_theta, gp = model)
-                    one_theta = np.exp(1.0 + one_log_theta)
+                    one_theta = np.log(1.0 + np.exp(one_log_theta))
+                    #one_theta = np.exp(1.0 + one_log_theta)
                     sample_theta_list.append(one_theta)
 
                 next_sample = integrate_sample(integrate_EI,sample_theta_list, yp, mode,
