@@ -51,14 +51,15 @@ class Gaussian_Process():
                         "kernel__k2__k1__constant_value": np.abs(theta_set[1]),
                         "kernel__k2__k2__length_scale": theta_set[2:]})
 
-    def log_marginal_likelihood(self,theta):
+    def log_marginal_likelihood(self,rho):
+        theta = np.log(1+np.exp(rho))
         return self.gp.log_marginal_likelihood(theta)
     
-    def log_prior_parameters(self, theta):
-        return np.sum(np.log([ss.norm(0, 1).pdf(theta_k) for theta_k in theta]))
+    def log_prior_parameters(self, rho):
+        return np.sum(np.log([ss.norm(0, 1).pdf(rho_k) for rho_k in rho]))
     
-    def log_joint_unnorm(self, theta):
-        return self.log_marginal_likelihood(theta) + self.log_prior_parameters(theta)
+    def log_joint_unnorm(self, rho):
+        return self.log_marginal_likelihood(rho) + self.log_prior_parameters(rho)
         
     def fit(self, X, y):
         self.gp.fit(X, y)
