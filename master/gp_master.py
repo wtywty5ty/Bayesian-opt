@@ -351,8 +351,8 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
     """
 
     # call slice sampler
-    slice_sampler = Slice_sampler(slice_sample_num, coor_sigma, burn_in)
-    acqui_slice_sampler = Slice_sampler(1, coor_sigma, burn_in) # only sample one sample a time
+    #slice_sampler = Slice_sampler(slice_sample_num, coor_sigma, burn_in)
+    acqui_slice_sampler = Slice_sampler(acqui_sample_num, coor_sigma, burn_in) # only sample one sample a time
 
     x_list = []
     y_list = []
@@ -428,11 +428,11 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
 
             elif acqui_mode == 'MCMC':
                 sample_theta_list = list()
-                for sample_acqui_time in range(acqui_sample_num):
-                    initial_rho = np.zeros((input_dimension + 2, ))
-                    one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
-                    one_theta = np.log(1.0 + np.exp(one_rho))
-                    sample_theta_list.append(one_theta)
+                
+                initial_rho = np.zeros((input_dimension + 2, ))
+                one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
+                one_theta = np.log(1.0 + np.exp(one_rho))
+                sample_theta_list = [sample_k for sample_k in one_theta]
 
                 next_sample = integrate_sample(integrate_EI,sample_theta_list, yp, mode,
                                                greater_is_better=greater_is_better, bounds=bounds,
@@ -440,11 +440,11 @@ def bayesian_optimisation(slice_sample_num, coor_sigma, burn_in, input_dimension
 
             elif acqui_mode == 'PERSEC':
                 sample_theta_list = list()
-                for sample_acqui_time in range(acqui_sample_num):
-                    initial_rho = np.zeros((input_dimension + 2, ))
-                    one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
-                    one_theta = np.log(1.0 + np.exp(one_rho))
-                    sample_theta_list.append(one_theta)
+                
+                initial_rho = np.zeros((input_dimension + 2, ))
+                one_rho = acqui_slice_sampler.sample(init = initial_rho, gp = model)
+                one_theta = np.log(1.0 + np.exp(one_rho))
+                sample_theta_list = [sample_k for sample_k in one_theta]
 
                 next_sample = integrate_sample_perSec(integrate_EI_perSec, sample_theta_list, dur, yp, mode,
                                                greater_is_better=greater_is_better, bounds=bounds,
