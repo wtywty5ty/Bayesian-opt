@@ -53,6 +53,7 @@ class Gaussian_Process():
 
     def log_marginal_likelihood(self,rho):
         theta = np.log(1+np.exp(rho))
+        theta = [theta[0],theta[1],theta[2:]]
         return self.gp.log_marginal_likelihood(theta)
     
     def log_prior_parameters(self, rho):
