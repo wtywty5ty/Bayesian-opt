@@ -4,6 +4,7 @@ Bayesian optimisation of loss functions.
 """
 
 import numpy as np
+import time
 import sklearn.gaussian_process as gp
 from sklearn.gaussian_process import kernels
 
@@ -97,6 +98,103 @@ def integrate_sample(acquisition_func, sample_theta_list, evaluated_loss, greate
                        bounds=bounds,
                        method='L-BFGS-B',
                        args=(sample_theta_list, evaluated_loss, greater_is_better, n_params))
+
+        if res.fun < best_acquisition_value:
+            best_acquisition_value = res.fun
+            best_x = res.x
+
+    return best_x
+################################################################################################################################################
+def integrate_EI_perSec(x, sample_theta_list, gaussian_process_logdur, evaluated_loss, greater_is_better=False, n_params=1):
+    """ expected_improvement
+
+    Expected improvement acquisition function.
+
+    Arguments:
+    ----------
+        x: array-like, shape = [n_samples, n_hyperparams]
+            The point for which the expected improvement needs to be computed.
+        sample_theta_list: hyperparameter samples of the GP model, which will be used to
+            calculate integrated acquisition function
+        gaussian_process_logdur: gaussian process object
+            model the distribution of log duration for different hyperparameters
+        evaluated_loss: Numpy array.
+            Numpy array that contains the values off the loss function for the previously
+            evaluated hyperparameters.
+        greater_is_better: Boolean.
+            Boolean flag that indicates whether the loss function is to be maximised or minimised.
+        n_params: int.
+            Dimension of the hyperparameter space.
+
+    """
+    # sample_theta_list contains all samples of hyperparameters
+    ei_list = list()
+    input_dimension = n_params
+    init_length_scale = np.ones((input_dimension, ))
+    kernel = kernels.Sum(kernels.WhiteKernel(),kernels.Product(kernels.ConstantKernel(),kernels.Matern(length_scale=init_length_scale, nu=5./2.)))
+    x_to_predict = x.reshape(-1, n_params)
+    mu_dur, sigma_dur = gaussian_process_logdur.predict(x_to_predict, return_std=True)
+
+    for theta_set in sample_theta_list:
+        model = gp.GaussianProcessRegressor(kernel=kernel, alpha=1e-5, optimizer = None, normalize_y=True)
+        model.set_params(**{"kernel__k1__noise_level": np.abs(theta_set[0]),
+                            "kernel__k2__k1__constant_value": np.abs(theta_set[1]),
+                            "kernel__k2__k2__length_scale": theta_set[2:]})
+
+        mu, sigma = model.predict(x_to_predict, return_std=True)
+
+        if greater_is_better:
+            loss_optimum = np.max(evaluated_loss)
+        else:
+            loss_optimum = np.min(evaluated_loss)
+
+        scaling_factor = (-1) ** (not greater_is_better)
+
+        # In case sigma equals zero
+        with np.errstate(divide='ignore'):
+            Z = scaling_factor * (mu - loss_optimum) / sigma
+            expected_improvement = scaling_factor * (mu - loss_optimum) * norm.cdf(Z) + sigma * norm.pdf(Z)
+            expected_improvement[sigma == 0.0] == 0.0
+        ei_list.append(expected_improvement[0])
+    res_ei = np.max(ei_list)
+    result = np.array([res_ei])
+    return -1 * result/np.exp(mu_dur)
+
+def integrate_sample_perSec(acquisition_func, sample_theta_list, gaussian_process_logdur, evaluated_loss, greater_is_better=False,
+                               bounds=(0, 10), n_restarts=25):
+    """ sample_next_hyperparameter
+
+    Proposes the next hyperparameter to sample the loss function for.
+
+    Arguments:
+    ----------
+        acquisition_func: function.
+            Acquisition function to optimise.
+        sample_theta_list: hyperparameter samples of the GP model, which will be used to
+            calculate integrated acquisition function
+        gaussian_process_logdur: gaussian process object
+            model the distribution of log duration for different hyperparameters
+        evaluated_loss: array-like, shape = [n_obs,]
+            Numpy array that contains the values off the loss function for the previously
+            evaluated hyperparameters.
+        greater_is_better: Boolean.
+            Boolean flag that indicates whether the loss function is to be maximised or minimised.
+        bounds: Tuple.
+            Bounds for the L-BFGS optimiser.
+        n_restarts: integer.
+            Number of times to run the minimiser with different starting points.
+
+    """
+    best_x = None
+    best_acquisition_value = 1
+    n_params = bounds.shape[0]
+
+    for starting_point in np.random.uniform(bounds[:, 0], bounds[:, 1], size=(n_restarts, n_params)):
+        res = minimize(fun=acquisition_func,
+                       x0=starting_point.reshape(1, -1),
+                       bounds=bounds,
+                       method='L-BFGS-B',
+                       args=(sample_theta_list, gaussian_process_logdur, evaluated_loss, greater_is_better, n_params))
 
         if res.fun < best_acquisition_value:
             best_acquisition_value = res.fun
@@ -251,6 +349,8 @@ def bayesian_optimisation(coor_sigma, burn_in, input_dimension,
 
     x_list = []
     y_list = []
+    y_dur_list = []
+    time_list = []
 
     n_params = bounds.shape[0]
 
@@ -259,15 +359,22 @@ def bayesian_optimisation(coor_sigma, burn_in, input_dimension,
         # random draw several points as GP prior
         for params in np.random.uniform(bounds[:, 0], bounds[:, 1], (n_pre_samples, bounds.shape[0])):
             x_list.append(params)
+            start = time.clock()
             y_list.append(sample_loss(params))
+            elapsed = (time.clock() - start)
+            y_dur_list.append(elapsed)
     else:
         for params in x0:
             x_list.append(params)
+            start = time.clock()
             y_list.append(sample_loss(params))
+            elapsed = (time.clock() - start)
+            y_dur_list.append(elapsed)
     print ('Presampling finished.')
 
     xp = np.array(x_list)
     yp = np.array(y_list)
+    yp_logdur = np.log(np.array(y_dur_list))
 
     # Create the GP
     init_length_scale = np.ones((input_dimension, ))
@@ -286,14 +393,24 @@ def bayesian_optimisation(coor_sigma, burn_in, input_dimension,
     else:
         raise Exception('Wrong GP model initialization mode!!!')
 
+    dur = gp.GaussianProcessRegressor(kernel=kernel,
+                                            alpha=alpha,
+                                            n_restarts_optimizer=10,
+                                            normalize_y=True)
+
     iter_num = 0
     for n in range(n_iters):
+        # Start the clock for recording total running time per iteration
+        ite_start = time.clock()
         iter_num += 1
         if iter_num % int(n_iters/2) == 0:
             print ('%d iterations have been run' % iter_num)
         else:
             pass
         # for each iteration, one sample will be drawn and used to train GP
+
+        dur.fit(xp, yp_logdur)
+
         if mode == 'OPT':
             # for optimization mode, the hyperparameters are optimized during the process of fitting
             model.fit(xp, yp)
@@ -327,6 +444,31 @@ def bayesian_optimisation(coor_sigma, burn_in, input_dimension,
                     raise Exception('Wrong process sample mode!!!')
 
             next_sample = integrate_sample(integrate_EI, sample_theta_list, yp, greater_is_better=greater_is_better, bounds=bounds, n_restarts=acqui_eva_num)
+
+        elif acqui_mode == 'PERSEC':
+            sample_theta_list = list()
+            while (len(sample_theta_list) < acqui_sample_num):  # all samples of theta must be valid
+                one_sample = acqui_slice_sampler.sample(init=initial_theta, gp=model)
+                if process_sample_mode == 'normal':
+                    if np.all(one_sample[:, 0] > 0):
+                        one_theta = [np.mean(samples_k) for samples_k in one_sample]
+                        sample_theta_list.append(one_theta)
+                    else:
+                        continue
+                elif process_sample_mode == 'abs':
+                    one_theta = [np.abs(np.mean(samples_k)) for samples_k in one_sample]
+                    sample_theta_list.append(one_theta)
+                elif process_sample_mode == 'rho':
+                    one_theta = [np.log(1.0 + np.exp((np.mean(samples_k)))) for samples_k in one_sample]
+                    sample_theta_list.append(one_theta)
+                else:
+                    raise Exception('Wrong process sample mode!!!')
+            next_sample = integrate_sample_perSec(integrate_EI_perSec, sample_theta_list, dur, yp, greater_is_better=greater_is_better, bounds=bounds, n_restarts=acqui_eva_num)
+
+        elif acqui_mode == 'RANDOM':
+            x_random = np.random.uniform(bounds[:, 0], bounds[:, 1], size=(5, n_params))
+            ei = -1 * expected_improvement(x_random, model, yp, greater_is_better=greater_is_better, n_params=n_params)
+            next_sample = x_random[np.argmax(ei), :]
         else:
             raise Exception('Wrong acquisition mode!!!')
 
@@ -335,14 +477,22 @@ def bayesian_optimisation(coor_sigma, burn_in, input_dimension,
             next_sample = np.random.uniform(bounds[:, 0], bounds[:, 1], bounds.shape[0])
 
         # Sample loss for new set of parameters
+        start = time.clock()
         func_value = sample_loss(next_sample)
+        elapsed = (time.clock() - start)
 
         # Update lists
         x_list.append(next_sample)
         y_list.append(func_value)
+        y_dur_list.append(elapsed)
 
         # Update xp and yp
         xp = np.array(x_list)
         yp = np.array(y_list)
+        yp_logdur = np.log(np.array(y_dur_list))
+
+        ite_elapsed = (time.clock() - ite_start)
+        time_list.append(ite_elapsed)
+        timep = np.array(time_list)
 
     return xp, yp
