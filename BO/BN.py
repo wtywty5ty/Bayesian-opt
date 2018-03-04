@@ -205,7 +205,7 @@ class BN():
 		init_sigma_biases_rho =np.float32(params[8])
 		
 		learning_rate = float(np.exp(learning_rate_log))
-		print "\tLearning rate: " + str(learning_rate) +", training epochs: " + str(n_epochs) + ", batch size: "+ str(batch_size) + ", n_samples: " + str(n_samples) + ", prior_sigma: " +str(prior_sigma) +", init_sigma_weights_mu:  " + str(init_sigma_weights_mu) +", init_sigma_biases_mu: "+ str(init_sigma_biases_mu) +", init_sigma_weights_rho: "+ str(init_sigma_weights_rho) +", init_sigma_biases_rho: "+ str(init_sigma_biases_rho)
+		print ("\tLearning rate: " + str(learning_rate) +", training epochs: " + str(n_epochs) + ", batch size: "+ str(batch_size) + ", n_samples: " + str(n_samples) + ", prior_sigma: " +str(prior_sigma) +", init_sigma_weights_mu:  " + str(init_sigma_weights_mu) +", init_sigma_biases_mu: "+ str(init_sigma_biases_mu) +", init_sigma_weights_rho: "+ str(init_sigma_weights_rho) +", init_sigma_biases_rho: "+ str(init_sigma_biases_rho))
 		        
 		n_batches =  int(self.train_data.shape[0]/ float(batch_size))
 
@@ -267,7 +267,7 @@ class BN():
 		                                                       y: self.train_target[i * batch_size: (i + 1) * batch_size],
 		                                                       scaling_factor: (2 ** (n_batches - (i + 1))) / ((2 ** n_batches) - 1 )})
 		    predictions = sess.run(pred, feed_dict={x: self.test_data})
-		    test_accuracy = np.count_nonzero(predictions == np.int32(self.test_target.ravel())) / float(self.test_data.shape[0]) ; print "Accuracy " + str(test_accuracy)
+		    test_accuracy = np.count_nonzero(predictions == np.int32(self.test_target.ravel())) / float(self.test_data.shape[0]) ; print ("Accuracy " + str(test_accuracy))
 		return 1 - test_accuracy
 
         
