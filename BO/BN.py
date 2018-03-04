@@ -194,7 +194,7 @@ class BN():
 		self.train_target = np.float32(preprocessing.OneHotEncoder(sparse=False).fit_transform(self.train_target))
 
 	def train_bayesian_nn(self,params):
-		learning_rate_log = params[0]
+		learning_rate = params[0]
 		n_epochs = int(params[1])
 		batch_size = int(params[2])
 		n_samples = int(params[3])
@@ -203,9 +203,7 @@ class BN():
 		init_sigma_biases_mu = np.float32(params[6])
 		init_sigma_weights_rho = np.float32(params[7])
 		init_sigma_biases_rho =np.float32(params[8])
-
-		learning_rate = float(np.exp(learning_rate_log))
-
+		
 		print "\tLearning rate: " + str(learning_rate) +", training epochs: " + str(n_epochs) + ", batch size: "+ str(batch_size) + ", n_samples: " + str(n_samples) + ", prior_sigma: " +str(prior_sigma) +", init_sigma_weights_mu:  " + str(init_sigma_weights_mu) +", init_sigma_biases_mu: "+ str(init_sigma_biases_mu) +", init_sigma_weights_rho: "+ str(init_sigma_weights_rho) +", init_sigma_biases_rho: "+ str(init_sigma_biases_rho)
 		        
 		n_batches =  int(self.train_data.shape[0]/ float(batch_size))
