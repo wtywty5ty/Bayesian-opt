@@ -19,7 +19,7 @@ def train_logisitc_regression_(mnist):
         batch_size = int(params[2])
         beta = params[3]
         learning_rate = np.exp(learning_rate_log)
-        print "\tLearning rate: " + str(learning_rate) + ", training epochs: " + str(training_epochs) + ", batch size: "+ str(batch_size) + ", beta " + str(beta)
+        print ("\tLearning rate: " + str(learning_rate) + ", training epochs: " + str(training_epochs) + ", batch size: "+ str(batch_size) + ", beta " + str(beta))
         display_step = 10
         # tf Graph Input
         x = tf.placeholder(tf.float32, [None, 784])
@@ -61,6 +61,6 @@ def train_logisitc_regression_(mnist):
             # Calculate accuracy
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             accuracy_result = accuracy.eval({x: mnist.test.images, y: mnist.test.labels})
-            print "\t\t Accuracy: " + str(accuracy_result)
+            print ("\t\t Accuracy: " + str(accuracy_result))
         return 1 - accuracy_result
     return train_logisitc_regression_
