@@ -223,7 +223,7 @@ class BN():
 
 		# Initialise variational paramters: mus and rhos for weights and biases
 		weights_mu, biases_mu, weights_rho, biases_rho = initialise_variational_parametes(n_hidden_layers = n_hidden_layers, 
-		                                                                          hidden_layers_dim = [400, 400],
+		                                                                          hidden_layers_dim = [200, 200],
 		                                                                          n_input = n_input,
 		                                                                          n_output = n_output,
 		                                                                          init_params = [init_sigma_weights_mu,
