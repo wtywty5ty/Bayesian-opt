@@ -172,11 +172,11 @@ def initialise_variational_parametes(n_hidden_layers, hidden_layers_dim, n_input
                                                         stddev=init_sigma_biases_mu),
                                        tf.float64)
             weights_rho[i] = tf.Variable(tf.random_normal((neurons[i], neurons[i+1]), 
-                                                          mean = 0., 
+                                                          mean = -5., 
                                                           stddev=init_sigma_weights_rho),
                                          tf.float64)
             biases_rho[i] = tf.Variable(tf.random_normal((neurons[i+1],), 
-                                                         mean = 0., 
+                                                         mean = -5., 
                                                          stddev = init_sigma_biases_rho),
                                         tf.float64)
     return weights_mu, biases_mu, weights_rho, biases_rho
@@ -223,7 +223,7 @@ class BN():
 
 		# Initialise variational paramters: mus and rhos for weights and biases
 		weights_mu, biases_mu, weights_rho, biases_rho = initialise_variational_parametes(n_hidden_layers = n_hidden_layers, 
-		                                                                          hidden_layers_dim = [200, 200],
+		                                                                          hidden_layers_dim = [400, 400],
 		                                                                          n_input = n_input,
 		                                                                          n_output = n_output,
 		                                                                          init_params = [init_sigma_weights_mu,
