@@ -495,4 +495,4 @@ def bayesian_optimisation(coor_sigma, burn_in, input_dimension,
         time_list.append(ite_elapsed)
         timep = np.array(time_list)
 
-    return xp, yp
+    return xp, yp, timep
