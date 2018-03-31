@@ -1,4 +1,4 @@
-""" gp.py
+""" 
 
 Bayesian optimisation of loss functions.
 """
