@@ -14,7 +14,7 @@ from scipy.optimize import minimize
 from utils import Slice_sampler
 ##################################################################################################################################################
 def integrate_EI(x, sample_theta_list, evaluated_loss, greater_is_better=False, n_params=1):
-    """ expected_improvement
+    """ integrate_expected_improvement
 
     Expected improvement acquisition function.
 
@@ -67,7 +67,7 @@ def integrate_EI(x, sample_theta_list, evaluated_loss, greater_is_better=False, 
 
 def integrate_sample(acquisition_func, sample_theta_list, evaluated_loss, greater_is_better=False,
                                bounds=(0, 10), n_restarts=25):
-    """ sample_next_hyperparameter
+    """ sample_next_hyperparameter with integrate_EI
 
     Proposes the next hyperparameter to sample the loss function for.
 
@@ -106,7 +106,7 @@ def integrate_sample(acquisition_func, sample_theta_list, evaluated_loss, greate
     return best_x
 ################################################################################################################################################
 def integrate_EI_perSec(x, sample_theta_list, gaussian_process_logdur, evaluated_loss, greater_is_better=False, n_params=1):
-    """ expected_improvement
+    """ expected_improvement per second
 
     Expected improvement acquisition function.
 
@@ -162,7 +162,7 @@ def integrate_EI_perSec(x, sample_theta_list, gaussian_process_logdur, evaluated
 
 def integrate_sample_perSec(acquisition_func, sample_theta_list, gaussian_process_logdur, evaluated_loss, greater_is_better=False,
                                bounds=(0, 10), n_restarts=25):
-    """ sample_next_hyperparameter
+    """ sample_next_hyperparameter with EI per second
 
     Proposes the next hyperparameter to sample the loss function for.
 
